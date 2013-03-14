@@ -37,30 +37,30 @@
 
 \title{\textbf{A Gentle Introduction to Maximum Likelihood \break for Undergraduate Engineering Audiences}}
 \author{Alp Kucukelbir}
-\date{\texttt{version 0.2}}
+\date{\texttt{version 0.3}}
 
 \begin{document}
 \maketitle
 
 \section{Introduction}
-You step on a scale to measure your weight, yet you are unsure of your scale's accuracy. So you take a second measurement of your weight. What do you do? You take the average of those two numbers, right? My question to you is, \emph{why?} Why not take the median? Or the mode? Or simply \emph{discard} the second number? \\
+You step on a scale to measure your weight, yet you are unsure of your scale's accuracy. So you take a second measurement of your weight. What do you do? You take the average of those two numbers. My question to you is, \emph{why?} Why not take the median? Or the mode? Or simply \emph{discard} the second number altogether? \\
 
-Estimation theory is a beautiful and deep topic. Many  engineering and computer science courses provide an elementary appreciation for it, generally by working through some examples. Yet many students struggle with the concept (prior exposure to statistics/probability) and mechanics of the examples (jargon, set-up, and computation). This may inhibit interpretation of the results and understanding of the true insights of estimation theory.\\
+Estimation theory is a beautiful and deep topic. Many  engineering and computer science courses provide an elementary appreciation for it, generally by working through some examples. Yet many students struggle with the concept (prior exposure to statistics/probability) and mechanics of the examples (jargon, set-up, and computation). My experience has been that these challenges mask the true insights of estimation theory.\\
 
-My goal in this gentle introduction is to work through, in eye-watering detail, every step of a simple maximum likelihood estimation problem. I will ground the entire discussion in a seemingly trivial example of measuring voltage with a voltmeter. Despite its simplicity, this example will motivate many aspects of estimation theory and (hopefully!) answer that first question of \emph{why the mean?}
+My goal in this gentle introduction is to work through, in eye-watering detail, every step of a simple maximum likelihood estimation problem. As a nod to my electrical engineering background, I will ground the entire discussion in a seemingly trivial example of measuring voltage with a voltmeter. Despite its simplicity, this example will motivate many aspects of estimation theory and (hopefully!) answer that first question of \emph{why the mean?}
 
 \section{Probabilistic Modeling}
-The world is not deterministic. There is uncertainty (noise) in our measurements and probability theory is a powerful framework in which to model and study uncertainty. This is why we use probability to setup estimation problems.\\
+The world is not deterministic. There is uncertainty (noise) in our measurements. Probability theory is a powerful framework in which to study and model uncertainty. This is why we use probability to setup estimation problems.\\
 
-So let's start with our basic example. We have a circuit board and a voltmeter. Our goal is to use our voltmeter to measure the voltage at a certain point on the circuit board. In the absence of any uncertainty (noise), this is what that would look like
+So let's start with our basic example. We have a circuit board and a voltmeter. Our goal is to use our voltmeter to measure the voltage at a certain point on the circuit board. In the absence of any uncertainty (noise), this is what the measurement would look like
 \begin{align}
 	x = v,\label{relationshipModel}
 \end{align}
-where $x$ is our measurement (the thing we read off the voltmeter) and $v$ is the \emph{true} voltage at that point in the terminal. This may seem like a pointless equation, but it is critical to understand that \emph{philosophically}, what you measure is \textbf{not} the true thing. The measurement $x$ is the result of an action: in this case, plugging a voltmeter into the board and reading off the number. The true thing is the voltage $v$ that is actually present at that point on the board.\\
+where $x$ is our measurement (the thing we read off the voltmeter) and $v$ is the \emph{true} voltage at that point in the terminal. This may seem like a pointless equation, but it is critical to understand that \emph{philosophically}, what you measure is \textbf{not} the true thing. The measurement $x$ is the result of an action: in this case, plugging a voltmeter into the board and reading off the number. The true thing is the voltage $v$ that actually exists on the board.\\
 
-The goal of probabilistic modeling is twofold: 1) to \emph{explain} the relationship between your measurement and the true thing, and 2) to \emph{describe} the uncertainty in your measurement. In our case, point 1 is trivial: we measure the voltage directly as explained by \Cref{relationshipModel}. Since we've covered point 1) above, let's move on to point 2).
+The goal of probabilistic modeling is twofold: 1) to \emph{explain} the relationship between your measurement and the true thing, and 2) to \emph{describe} the uncertainty in your measurement. In our case, point 1 is trivial: we measure the voltage directly as explained by \Cref{relationshipModel}. Since we've covered point 1) above, let's move on to point 2).\\
 
-I now tell you that the voltmeter is not perfect. I have determined that in reality it tends to introduce small errors in my measurements. I have realized that these errors seem to be more or less in the $[-3, 3]$ volt range while an overwhelming amount of the errors are actually between $[-1, 1]$. Therefore, I \textbf{decide} to \textbf{model} this ``real-world'' reality as follows,
+I now tell you that the voltmeter is not perfect. I have determined that in reality it tends to introduce small errors in my measurements. I have realized that these errors seem to be more or less in the $[-5, 5]$ volt range while an overwhelming amount of the errors are actually between $[-3, 3]$. Therefore, I \textbf{decide} to \textbf{model} this ``real-world'' phenomenon as follows,
 \begin{align}
 	x &= v + \eta, \label{measurementModel}\\
 	\eta &\sim \mathcal{N}(0,1)\label{noiseModel}.
@@ -68,9 +68,11 @@ I now tell you that the voltmeter is not perfect. I have determined that in real
 
 Now, what does this say? Remember, I have always encouraged you to read equations out aloud in plain English. So let's do that. \\
 
-\Cref{measurementModel} says that I measure some number $x$ from my voltmeter. This number is equal to the true thing (voltage $v$) plus some other number $\eta$. \Cref{noiseModel} says that $\eta$ is random. This means that if I take one measurement, I will get $x_1 = v + \eta_1$. If I then take another measurement, I will get $x_2 = v + \eta_2$. Note that the true voltage $v$ is the same, while the thing that makes $x_1 \neq x_2$ is that $\eta_1 \neq \eta_2$. \\
+\Cref{measurementModel} says that I measure some number $x$ from my voltmeter. This number is equal to the true thing (voltage $v$) plus some other number $\eta$. \\
 
-Now, \cref{noiseModel} says that $\eta$ is random and we know something about it. We know how it is distributed. In this case, it is distributed as a Gaussian centered around $0$ with standard deviation $1$. This is my model for how my voltmeter makes mistakes in its measurements. \\
+\Cref{noiseModel} says that $\eta$ is random. This means that if I take one measurement, I will get $x_1 = v + \eta_1$. If I then take another measurement, I will get $x_2 = v + \eta_2$. Note that the true voltage $v$ is the same, while the thing that makes $x_1 \neq x_2$ is that $\eta_1 \neq \eta_2$. \\
+
+Now, \cref{noiseModel} says something more about $\eta$. Not only is $\eta$ random, but we also know how it is distributed. In this case, it is distributed as $\mathcal{N}(0,1)$, a Gaussian centered around $0$ with standard deviation $1$. This is my model for how my voltmeter makes mistakes in its measurements. \\
 
 Note that I have not said anything about estimation yet. I am simply \emph{describing} the uncertainty in my measurements. I am \textbf{probabilistically modeling} the physics of my voltmeter. That is all. This may be a bad model of reality, in which case I will likely do a poor job of estimating the voltage. Many real-world problems were difficult to tackle until someone came along and proposed a good probabilistic model. Let's assume, for now, that this is a decent model.\\
 
@@ -89,7 +91,7 @@ Another way of saying this, is by explicitly writing out the \emph{probability} 
 \begin{align}
 	p(x \vert v=v_f) &= \frac{1}{\sqrt{2\pi}}\,\exp\left( -\frac{(x-v_f)^2}{2} \right) \label{prob}.
 \end{align}
-Again, read this out in plain English. This says that, if the voltage on the circuit board happened to be some voltage $v_f$, then the probability of me measuring some number on my voltmeter is given by the right hand side of \Cref{prob}. So let's plug some numbers in, just for fun. Let's say $v_f = 5$ volts. What is the probability of observing $x=4.9$?
+Again, read this out in plain English. This says that, if the voltage on the circuit board happened to be some voltage $v_f$, then the probability of me measuring some number on my voltmeter is given by the right hand side of \Cref{prob}. So let's plug some numbers in, just for fun. Let's say $v_f = 5$ volts. What is the probability of observing $x=4.7$?
 \begin{align}
 	p(x=4.7 \vert v = 5) &= \frac{1}{\sqrt{2\pi}}\,\exp\left(-\frac{(4.7-5)^2}{2} \right)\\
 						 &= 0.3814
@@ -101,16 +103,17 @@ In comparison, what is the probability of observing $x=2$?
 \end{align}
 So, we are more likely to measure 4.7 volts rather than 2 volts, given that the true voltage is 5 volts. This seems to adhere with our understanding of reality and how well our voltmeter works. Great.\\
 
-In practice, we tend to drop the explicit notation of $v=v_f$. So the following equation is completely equivalent to \cref{prob}
+In practice, we tend to drop the explicit notation of $v=v_f$. The following equation is completely equivalent to \cref{prob}
 \begin{align}
 	p(x \vert v) &= \frac{1}{\sqrt{2\pi}}\,\exp\left( -\frac{(x-v)^2}{2} \right).
 \end{align}
+If you get confused, simply re-introduce the explicit notation during your calculations. Do not worry: you will quickly become accustomed to the implicit notation and save the planet with your reduced ink consumption.\\
 
-Now, we've been discussing \emph{single} measurements up to this point. Now, we are going to switch to talking about \emph{multiple} measurements. The reason for this is that, just like the scale case in the introduction, if you don't trust your voltmeter, you will want to take multiple measurements. Before we address \emph{what to do} with those measurements, we need to introduce the concept of \emph{likelihood functions} and their subtleties.\\
+Up to this point, we've been discussing \emph{single} measurements up to this point. Now we are going to switch to talking about \emph{multiple} measurements. The reason is, just like the weighing example in the introduction, if you don't trust your voltmeter, you will want to take multiple measurements. Before we address \emph{what to do} with those measurements, we need to introduce the concept of \emph{likelihood functions} and their subtleties.\\
 
 \section{Likelihood}
 
-Let's say that we measure the voltage $n$ times, $x_1, x_2, \ldots, x_n$, and stack all those measurements into a vector $X = \{x_1, x_2, \ldots, x_n\}$. If we know that these measurements were done independently, we can compute the joint probability as a product of the single measurement probabilities. Therefore, the joint probability of observing all $n$ measurements given the true voltage $v$ (which doesn't change between measurements, in our case), as
+Let's say that we measure the voltage $n$ times, $x_1, x_2, \ldots, x_n$, and stack all those measurements into a vector $X = \{x_1, x_2, \ldots, x_n\}$. If we know that these measurements were done independently, we can compute the joint probability as a product of the single measurement probabilities. Therefore, the joint probability of observing all $n$ measurements given the true voltage $v$ (which doesn't change between measurements) is
 \begin{align}
 	p(X\vert v) &= \prod_{i=1}^n p(x_i|v)\\
 				&= \prod_{i=1}^n \frac{1}{\sqrt{2\pi}}\,\exp\left( -\frac{(x_i-v)^2}{2} \right).\label{likelihood}
@@ -124,16 +127,16 @@ In plain English, it says: the probability of measuring $n$ independent numbers 
 
 Now in \emph{likelihood} parlance, we like to talk about the likelihood being parametrized by $\theta$. This is simply another way of saying that the likelihood distribution depends on the value of $\theta$. In our case, the measurements $X$ will clearly depend on what the true value of the voltage $v$ is. Therefore, our parameter $\theta$ is $v$, and $X$ is the data (our measurements).\\
 
-We've spent three full pages talking about all sorts of interesting business, but now we finally get to the goal of this endeavor: estimating $\theta$ from $X$. Or in plain English, what do you do with $n$ measurements from your voltmeter if what you want is the true voltage $v$ in your circuit.
+We've spent three full pages talking about all sorts of interesting things, but now we finally get to the goal of this endeavor: estimating $\theta$ from $X$. Or in plain English, what do you do with $n$ measurements from your voltmeter if what you want is the true voltage $v$ in your circuit.
 
 \section{Maximum Likelihood Estimation}
 Maximum Likelihood (ML) estimation is a \emph{framework} of estimating the parameter (what you want) from your data (what you measure). Stated simply, it says this: to estimate $\theta$, first probabilistically model your problem, then calculate the likelihood of your measurements, and finally find the $\theta$ that maximizes your likelihood. Mathematically, this looks like this
 \begin{align}
  	\widehat{\theta}_{ML} = \arg \max_\theta\, l(X\vert\theta),
  \end{align} 
-where $\widehat{\theta}_{ML}$ is the maximum likelihood \textbf{estimate} of $\theta$, and $ \arg \min_\theta$ means `find the $\theta$ that maximizes the following function.' The right hand side of this equation will be a function of the data $X$. This function is called the maximum likelihood \textbf{estimator}. The \textbf{estimate} is the output of the \textbf{estimator}.\\
+where $\widehat{\theta}_{ML}$ is the maximum likelihood \textbf{estimate} of $\theta$, and $ \arg \max_\theta$ means `find the $\theta$ that maximizes the following function.' The right hand side of this equation will be a function of the data $X$. This function is called the maximum likelihood \textbf{estimator}. The \textbf{estimate} is the output of the \textbf{estimator}.\\
 
-Let's first understand the insight behind this. Remember what the likelihood is. The likelihood is the probability of observing $n$ measurements as a function of the parameter $v$. In our case, it is the probability of measuring $n$ values from our voltmeter, given that the true voltage is $v$. What maximum likelihood tells you is, to estimate the true voltage, just find the value of $v$ that maximizes the probability of observing the measurements. This is the ``most likely'' value of $v$.\\
+Let's first understand the insight behind this. Remember what the likelihood is. The likelihood is the probability of observing $n$ measurements as a function of the parameter $\theta$. In our case, it is the probability of measuring $n$ values from our voltmeter, given that the true voltage is $v$. What maximum likelihood tells you is, to estimate the true voltage, just find the value of $v$ that maximizes the probability of observing the measurements. This is the ``most likely'' value of $v$.\\
 
 So, I claim that, for our small example here, the maximum likelihood estimator is
 \begin{align}
@@ -146,12 +149,15 @@ You should verify this (\textsf{do it, please!}) by checking if this is indeed t
 \end{align}
 This always holds as the logarithm is a monotonically increasing function. (It does not modify the maxima/minima of the function.)\\
 
-So now we have answered the question of why we should take the mean of our voltmeter measurements! Because taking the mean is the maximum likelihood estimator of the true voltage. And so it enjoys all the wonderful properties of maximum likelihood estimation, which I presume you will cover in class. 
+So now we have answered the question of why we should take the mean of our voltmeter measurements! Because taking the mean is the maximum likelihood estimator of the true voltage. And so it enjoys all the wonderful properties of maximum likelihood estimation, which I presume you will cover in class.\\ 
 
 (\textsf{I will probably include a brief discussion on this in the future.})
 
+(\textsf{I will also probably expand this simple example to MAP estimation.})
+
 \section{Version History}
 \begin{description}
+	\item[\texttt{version 0.3:}] Typos, thanks to comments from an anonymous EENG 202 alum.
 	\item[\texttt{version 0.2:}] Expanded for general audiences.
 	\item[\texttt{version 0.1:}] Initial draft, written as a supplement for Yale University's EENG 202 class.
 \end{description}
