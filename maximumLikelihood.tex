@@ -1,45 +1,61 @@
-% BEGINING of PREAMBLE 
+% BEGINING of PREAMBLE
 \RequirePackage[l2tabu, orthodox]{nag}
-\documentclass[10pt,letterpaper]{article}
+\documentclass[10pt]{article}
+
+% FONTS
+\usepackage{tgschola}
+\usepackage[T1]{fontenc}
+
+% SPACING and TEXT
+\usepackage{microtype}
+\usepackage[parfill]{parskip}
+\usepackage{afterpage}
 
 % GEOMETRY
 \usepackage[paper  = letterpaper,
-			left   = 1.5in,               
+			left   = 1.5in,
 			right  = 1.5in,
 			top    = 1.0in,
-			bottom = 1.0in,
-			]{geometry}
+            bottom = 1.0in,
+            ]{geometry}
 
-% FONTS
-\usepackage[T1]{fontenc}
-\usepackage{garamondx}
-\usepackage[garamondx,cmbraces]{newtxmath}
+% COLOR
+\usepackage[usenames,dvipsnames]{xcolor}
 
-% USEFUL
-\usepackage{microtype}
-\usepackage[parfill]{parskip} 
-\usepackage{cleveref}
+% FIGURES
 \usepackage{graphicx}
+\usepackage[labelfont=bf]{caption}
+\usepackage[format=hang]{subcaption}
+
+% TABLES
+\usepackage{booktabs}
 
 % MATH
-\usepackage{amsmath}
+\usepackage{amsmath, amsthm, amssymb}
 
-% MISC
+% HYPERREF
+\usepackage[colorlinks,linktoc=all]{hyperref}
+\usepackage[all]{hypcap}
+\hypersetup{citecolor = BurntOrange}
+\hypersetup{linkcolor = MidnightBlue}
+\hypersetup{urlcolor  = BrickRed}
+
+% CLEVEREF must come after HYPERREF
 \usepackage{cleveref}
+
 \renewcommand{\theequation}{\thesection.\arabic{equation}}
-\setlength{\parindent}{0em}
 
 % END of PREAMBLE
 
-\title{\textbf{A Gentle Introduction to Maximum Likelihood \break for Undergraduate Engineering Audiences}}
+\title{{A Gentle Introduction to Maximum Likelihood for Undergraduate Engineering Audiences}}
 \author{Alp Kucukelbir}
-\date{\texttt{version 0.4}}
+\date{\texttt{version 0.5 compiled on (\today)}}
 
 \begin{document}
 \maketitle
 
 \section{Introduction}
-You step on a scale to measure your weight, yet you are unsure of your scale's accuracy. So you take a second measurement of your weight. What do you do? You take the average of those two numbers. My question to you is, \emph{why?} Why not take the median? Or the mode? Or simply \emph{discard} the second number altogether? 
+You step on a scale to measure your weight, yet you are unsure of your scale's accuracy. So you take a second measurement of your weight. What do you do? You take the average of those two numbers. My question to you is, \emph{why?} Why not take the median? Or the mode? Or simply \emph{discard} the second number altogether?
 
 Estimation theory is a beautiful and deep topic. Many  engineering and computer science courses provide an elementary appreciation for it, generally by working through some examples. Yet many students struggle with the concept (prior exposure to statistics/probability) and mechanics of the examples (jargon, set-up, and computation). My experience has been that these challenges confound the true insights of estimation theory.
 
@@ -62,13 +78,13 @@ I now tell you that the voltmeter is not perfect. I have determined that in real
 	\eta &\sim \mathcal{N}(0,1)\label{noiseModel}.
 \end{align}
 
-Now, what does this say? Remember, I always encourage you to read equations out aloud in plain English. So let's do that. 
+Now, what does this say? Remember, I always encourage you to read equations out aloud in plain English. So let's do that.
 
-\Cref{measurementModel} says that I measure some number $x$ from my voltmeter. This number is equal to the true thing (voltage $v$) plus some other number $\eta$. 
+\Cref{measurementModel} says that I measure some number $x$ from my voltmeter. This number is equal to the true thing (voltage $v$) plus some other number $\eta$.
 
-\Cref{noiseModel} says that $\eta$ is random. This means that if I take one measurement, I will get $x_1 = v + \eta_1$. If I then take another measurement, I will get $x_2 = v + \eta_2$. Note that the true voltage $v$ is the same, while the thing that makes $x_1 \neq x_2$ is that $\eta_1 \neq \eta_2$. 
+\Cref{noiseModel} says that $\eta$ is random. This means that if I take one measurement, I will get $x_1 = v + \eta_1$. If I then take another measurement, I will get $x_2 = v + \eta_2$. Note that the true voltage $v$ is the same, while the thing that makes $x_1 \neq x_2$ is that $\eta_1 \neq \eta_2$.
 
-Now, \cref{noiseModel} says something more about $\eta$. Not only is $\eta$ random, but we also know how it is distributed. In this case, it is distributed as $\mathcal{N}(0,1)$, a Gaussian centered around $0$ with standard deviation $1$. This is my model for how my voltmeter makes mistakes in its measurements. 
+Now, \cref{noiseModel} says something more about $\eta$. Not only is $\eta$ random, but we also know how it is distributed. In this case, it is distributed as $\mathcal{N}(0,1)$, a Gaussian centered around $0$ with standard deviation $1$. This is my model for how my voltmeter makes mistakes in its measurements.
 
 Note that I have not said anything about estimation yet. I am simply \emph{describing} the uncertainty in my measurements. I am \textbf{probabilistically modeling} the physics of my voltmeter. That is all. This may be a bad model of reality, in which case I will likely do a poor job of estimating the voltage. Many real-world problems were difficult to tackle until someone came along and proposed a good probabilistic model. Let's assume, for now, that this is a decent model.
 
@@ -126,10 +142,10 @@ Now in \emph{likelihood} parlance, we like to talk about the likelihood being pa
 We've spent three full pages talking about all sorts of interesting things, but now we finally get to the goal of this endeavor: estimating $\theta$ from $X$. Or in plain English, what do you do with $n$ measurements from your voltmeter if what you want is the true voltage $v$ in your circuit.
 
 \section{Maximum Likelihood Estimation}
-Maximum Likelihood (ML) estimation is a \emph{framework} of estimating the parameter (what you want) from your data (what you measure). Stated simply, it says this: to estimate $\theta$, first probabilistically model your problem (Sections 2 \& 3), then calculate the likelihood of your measurements (Section 4), and finally find the $\theta$ that maximizes your likelihood. Mathematically, this looks like
+Maximum Likelihood (ML) estimation is a \emph{method} of estimating the parameter (what you want) from your data (what you measure). Stated simply, it says this: to estimate $\theta$, first probabilistically model your problem (Sections 2 \& 3), then calculate the likelihood of your measurements (Section 4), and finally find the $\theta$ that maximizes your likelihood. Mathematically, this looks like
 \begin{align}
  	\widehat{\theta}_{ML} = \arg \max_\theta\, l(X\vert\theta),
- \end{align} 
+ \end{align}
 where $\widehat{\theta}_{ML}$ is the maximum likelihood \textbf{estimate} of $\theta$, and $ \arg \max_\theta$ means `find the $\theta$ that maximizes the following function.' The right hand side of this equation will eventually be a function of the data $X$. This function is called the maximum likelihood \textbf{estimator}. The estimate is the output of the estimator; do not get these two terms mixed up.
 
 Let's first understand the insight behind this. Remember what the likelihood is. The likelihood is the probability of observing $n$ measurements as a function of the parameter $\theta$. In our case, it is the probability of measuring $n$ values from our voltmeter, given that the true voltage is $v$. What maximum likelihood tells you is, to estimate the true voltage, just find the value of $v$ that maximizes the probability of observing the measurements. This is the ``most likely'' value of $v$.
@@ -145,7 +161,7 @@ You should verify this (\emph{do it, please!}) by checking if this is indeed the
 \end{align}
 This always holds as the logarithm is a monotonically increasing function. (It does not modify the maxima/minima of the function.)
 
-So now we have answered the question of why we should take the mean of our voltmeter measurements! Because taking the mean is the maximum likelihood estimator of the true voltage. And so it enjoys all the wonderful properties of maximum likelihood estimation, which I presume you will cover in class. 
+So now we have answered the question of why we should take the mean of our voltmeter measurements! Because taking the mean is the maximum likelihood estimator of the true voltage. And so it enjoys all the wonderful properties of maximum likelihood estimation, which I presume you will cover in class.
 
 (\emph{I will probably include a brief discussion to wrap up this section in the future.})
 
@@ -153,6 +169,7 @@ So now we have answered the question of why we should take the mean of our voltm
 
 \section{Version History}
 \begin{description}
+	\item[\texttt{version 0.5:}] Style changes and minor clarifications.
 	\item[\texttt{version 0.4:}] Style changes and some typos.
 	\item[\texttt{version 0.3:}] Typos, thanks to comments from an anonymous EENG 202 alum.
 	\item[\texttt{version 0.2:}] Expanded for general audiences.
@@ -162,7 +179,10 @@ So now we have answered the question of why we should take the mean of our voltm
 \section{Colophon}
 A Gentle Introduction to Maximum Likelihood for Undergraduate Engineering Students by Alp Kucukelbir is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License.
 
-The \LaTeX{} source and license lives at \texttt{https://github.com/akucukelbir/maximumLikelihood}
+The \LaTeX{} source and license lives at
+\begin{center}
+	\url{https://github.com/akucukelbir/maximumLikelihood}
+\end{center}
 \end{document}
 
 
